@@ -18,10 +18,10 @@ import os
 tensorboard --logdir log
 """
 base_path = os.getcwd()
-batch_size = 10
+batch_size = 45
 input_size = 128  # 图片大小
 NUM_EPOCHS = 500
-LEARNING_RATE = 3e-3
+LEARNING_RATE = 1e-3
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # optimizer
 
@@ -45,7 +45,7 @@ transform = transforms.Compose(
     [
         transforms.Pad(4),
         transforms.RandomHorizontalFlip(),
-        transforms.RandomCrop(128),
+        transforms.CenterCrop(64),
         transforms.ToTensor(),
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     ])

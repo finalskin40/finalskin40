@@ -71,7 +71,7 @@ class ResNet(nn.Module):
         self.layer4 = self.make_layer(block, 512, num_blocks=layers[3], stride=2)
 
         # part3
-        self.fc = nn.Linear(8192, 40)
+        self.fc = nn.Linear(2048, 40)
         # To-Do: initialize part 3 here
 
     def make_layer(self, block, out_channels, num_blocks, stride=1):
