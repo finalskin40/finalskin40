@@ -20,14 +20,15 @@ tensorboard --logdir log
 base_path = os.getcwd()
 batch_size = 10
 input_size = 128  # 图片大小
-NUM_EPOCHS = 50
-LEARNING_RATE = 1e-3
+NUM_EPOCHS = 500
+LEARNING_RATE = 3e-3
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # optimizer
 
 loss = F.cross_entropy
 model = ResNet(SEResidualBlock, [2, 2, 2, 2]).to(device=DEVICE) # Basic_CNN().to(device=DEVICE)
-
+# state_dict = torch.load('latest-ai.pth')
+# model.load_state_dict(state_dict)
 optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
 """
