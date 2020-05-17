@@ -1,13 +1,10 @@
 import torch
 import torch.nn as nn
-import torch.utils.model_zoo.load_url as load_state_dict_from_url
-
-
+from torch.utils.model_zoo import load_url
 
 __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
            'resnet152', 'resnext50_32x4d', 'resnext101_32x8d',
            'wide_resnet50_2', 'wide_resnet101_2']
-
 
 model_urls = {
     'resnet18': 'https://download.pytorch.org/models/resnet18-5c106cde.pth',
@@ -157,6 +154,7 @@ class ResNet(nn.Module):
                                        dilate=replace_stride_with_dilation[2])
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(512 * block.expansion, num_classes)
+        self.fin = nn.Linear(1000, 40)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -214,7 +212,7 @@ class ResNet(nn.Module):
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
         x = self.fc(x)
-
+        x = self.fin(x)
         return x
 
     def forward(self, x):
@@ -224,8 +222,8 @@ class ResNet(nn.Module):
 def _resnet(arch, block, layers, pretrained, progress, **kwargs):
     model = ResNet(block, layers, **kwargs)
     if pretrained:
-        state_dict = load_state_dict_from_url(model_urls[arch],
-                                              progress=progress)
+        state_dict = load_url(model_urls[arch],
+                              progress=progress)
         model.load_state_dict(state_dict)
     return model
 
