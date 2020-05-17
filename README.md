@@ -7,3 +7,4 @@ Skin40文件夹直接放在main.py旁边即可
 训练以及分析结果画图整个流程在main.py
 
 建议使用pycharm或vscode+anaconda进行开发工作
+ipynb版本仅支持在集群上运行，本地肯定没有那么多显存
