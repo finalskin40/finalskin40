@@ -9,7 +9,6 @@ import torch.nn.functional as F
 from tqdm import tqdm
 from ourtools import *
 from my_model.Basic_CNN import Basic_CNN
-from my_model.SE_ResNet import *
 import os
 
 # 查看训练曲线
@@ -18,20 +17,20 @@ import os
 tensorboard --logdir log
 """
 base_path = os.getcwd()
-batch_size = 45
+batch_size = 120
 input_size = 128  # 图片大小
-NUM_EPOCHS = 500
+NUM_EPOCHS = 50
 LEARNING_RATE = 1e-3
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # optimizer
 
 loss = F.cross_entropy
-model = ResNet(SEResidualBlock, [2, 2, 2, 2]).to(device=DEVICE) # Basic_CNN().to(device=DEVICE)
+model = Basic_CNN().to(device=DEVICE) # Basic_CNN().to(device=DEVICE)
 # state_dict = torch.load('latest-ai.pth')
 # model.load_state_dict(state_dict)
 optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
-"""
+
 transform = transforms.Compose(
     [
         transforms.Resize(input_size),
@@ -40,18 +39,9 @@ transform = transforms.Compose(
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     ]
 )
-"""
-transform = transforms.Compose(
-    [
-        transforms.Pad(4),
-        transforms.RandomHorizontalFlip(),
-        transforms.CenterCrop(64),
-        transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-    ])
 
 
-dataset = ImageFolder("Skin40\\", transform=transform)
+dataset = ImageFolder("Skin40", transform=transform)
 print(dataset)
 print(dataset.class_to_idx)
 train_db, val_db = random_split(dataset, [1920, 480])
