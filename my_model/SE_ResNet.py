@@ -17,6 +17,7 @@ class ResidualBlock(nn.Module):
         """
         Initializes internal Module state, shared by both nn.Module.
         """
+
         super(ResidualBlock, self).__init__()
         self.left = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False),
@@ -71,7 +72,7 @@ class ResNet(nn.Module):
         self.layer4 = self.make_layer(block, 512, num_blocks=layers[3], stride=2)
 
         # part3
-        self.fc = nn.Linear(2048, 40)
+        self.fc = nn.Linear(8192, 40)
         # To-Do: initialize part 3 here
 
     def make_layer(self, block, out_channels, num_blocks, stride=1):
@@ -120,7 +121,9 @@ class SELayer(nn.Module):
         super(SELayer, self).__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.fc1 = nn.Conv2d(channels, channels // reduction, kernel_size=1)
+        self.dropoutlay = nn.Dropout(0.3)
         self.relu = nn.ReLU(inplace=True)
+
         self.fc2 = nn.Conv2d(channels // reduction, channels, kernel_size=1)
         self.sigmoid = nn.Sigmoid()
 
@@ -128,6 +131,7 @@ class SELayer(nn.Module):
         module_input = x
         x = self.avg_pool(x)
         x = self.fc1(x)
+        x = self.dropoutlay(x)
         x = self.relu(x)
         x = self.fc2(x)
         x = self.sigmoid(x)
