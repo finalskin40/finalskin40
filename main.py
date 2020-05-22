@@ -51,13 +51,15 @@ transform = transforms.Compose(
     ])
 
 
-dataset = ImageFolder("Skin40\\", transform=transform)
+dataset = ImageFolder("Skin40", transform=transform)
 print(dataset)
 print(dataset.class_to_idx)
+'''
 train_db, val_db = random_split(dataset, [1920, 480])
 train_dataloader = DataLoader(train_db, shuffle=True, batch_size=batch_size)
 valid_dataloader = DataLoader(val_db, shuffle=False, batch_size=batch_size)
-
+'''
+dataset1, dataset2, dataset3, dataset4, dataset5 = random_split(dataset, [480, 480, 480, 480, 480])
 
 def evaluate(model_eval, loader_eval, criterion_eval):
     """
@@ -93,36 +95,54 @@ def train(model, loss_func, optimizer, device):
     val_accs = []
     val_losses = []
     for epoch_idx in range(NUM_EPOCHS):
+        
+        '''
+        五折交叉验证
+        '''
+        for i in range(5):
+            train_dataset = 0
+            valid_dataset = 0
+            for j,dataset0 in zip(range(5),(dataset1, dataset2, dataset3, dataset4, dataset5)):
+                if j != i:
+                    if train_dataset == 0:
+                        train_dataset = dataset0
+                    else:
+                        train_dataset += dataset0
+                else:
+                    valid_dataset = dataset0
+            train_dataloader = DataLoader(train_dataset, shuffle=True, batch_size=batch_size)
+            valid_dataloader = DataLoader(valid_dataset, shuffle=False, batch_size=batch_size)
 
         # TODO: Implement the training loop
 
         # YOUR CODE HERE
-        pbar = tqdm(
-            total=len(train_dataloader),
-            desc="Train - Epoch {}".format(epoch_idx),
-            ncols=100,
-        )
-        for batch_idx, (data, target) in enumerate(train_dataloader):
+            pbar = tqdm(
+                total=len(train_dataloader),
+                desc="Train - Epoch {}".format(epoch_idx),
+                ncols=100,
+            )
+            for batch_idx, (data, target) in enumerate(train_dataloader):
 
-            data, target = data.to(DEVICE), target.to(DEVICE)
-            output = model(data)
-            loss = loss_func(output, target)
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-            pbar.update(1)
-        pbar.close()
+                data, target = data.to(DEVICE), target.to(DEVICE)
+                output = model(data)
+                loss = loss_func(output, target)
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+                pbar.update(1)
+            pbar.close()
 
-        # END OF YOUR CODE
-        train_resp = evaluate(model, train_dataloader, loss_func)
-        eval_resp = evaluate(model, valid_dataloader, loss_func)
+            # END OF YOUR CODE
+            train_resp = evaluate(model, train_dataloader, loss_func)
+            eval_resp = evaluate(model, valid_dataloader, loss_func)
 
-        print("-*-*-*-*-*- Epoch {} -*-*-*-*-*-".format(epoch_idx))
-        print("Train Loss: {:.6f}\t".format(train_resp["loss"]))
-        print("Train Acc: {:.6f}\t".format(train_resp["acc"]))
-        print("Eval Loss: {:.6f}\t".format(eval_resp["loss"]))
-        print("Eval Acc: {:.6f}\t".format(eval_resp["acc"]))
-        print("\n")
+            print("-*-*-*-*-*- Epoch {} -*-*-*-*-*-".format(epoch_idx))
+            print("-*-*-*-*-*- fold {} -*-*-*-*-*-".format(i))
+            print("Train Loss: {:.6f}\t".format(train_resp["loss"]))
+            print("Train Acc: {:.6f}\t".format(train_resp["acc"]))
+            print("Eval Loss: {:.6f}\t".format(eval_resp["loss"]))
+            print("Eval Acc: {:.6f}\t".format(eval_resp["acc"]))
+            print("\n")
         train_accs.append(train_resp["acc"])
         train_losses.append(train_resp["loss"])
         val_accs.append(eval_resp["acc"])
