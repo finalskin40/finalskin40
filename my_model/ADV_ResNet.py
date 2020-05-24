@@ -2,9 +2,12 @@ import torch
 import torch.nn as nn
 from torch.utils.model_zoo import load_url
 
+
+
 __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
            'resnet152', 'resnext50_32x4d', 'resnext101_32x8d',
            'wide_resnet50_2', 'wide_resnet101_2']
+
 
 model_urls = {
     'resnet18': 'https://download.pytorch.org/models/resnet18-5c106cde.pth',
@@ -121,7 +124,7 @@ class Bottleneck(nn.Module):
 
 class ResNet(nn.Module):
 
-    def __init__(self, block, layers, num_classes=40, zero_init_residual=False,
+    def __init__(self, block, layers, num_classes=1000, zero_init_residual=False,
                  groups=1, width_per_group=64, replace_stride_with_dilation=None,
                  norm_layer=None):
         super(ResNet, self).__init__()
@@ -154,7 +157,11 @@ class ResNet(nn.Module):
                                        dilate=replace_stride_with_dilation[2])
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(512 * block.expansion, num_classes)
-
+        self.dropout1 = nn.Dropout(0.5)
+        self.dropout2_hard = nn.Dropout2d(0.5)
+        self.dropout2_mid = nn.Dropout2d(0.48)
+        self.dropout2_light = nn.Dropout2d(0.46)
+        
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
@@ -199,17 +206,23 @@ class ResNet(nn.Module):
     def _forward_impl(self, x):
         # See note [TorchScript super()]
         x = self.conv1(x)
+        x = self.dropout2_light(x)
         x = self.bn1(x)
         x = self.relu(x)
         x = self.maxpool(x)
 
         x = self.layer1(x)
+        x = self.dropout2_light(x)
         x = self.layer2(x)
+        x = self.dropout2_light(x)
         x = self.layer3(x)
+        x = self.dropout2_mid(x)
         x = self.layer4(x)
+        x = self.dropout2_hard(x)
 
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
+        x = self.dropout1(x)
         x = self.fc(x)
         return x
 
@@ -221,12 +234,10 @@ def _resnet(arch, block, layers, pretrained, progress, **kwargs):
     model = ResNet(block, layers, **kwargs)
     if pretrained:
         state_dict = load_url(model_urls[arch],
-                              progress=progress)
-        try:
-            model.load_state_dict(state_dict)
-        except:
-            return model
+                                              progress=progress)
 
+        model.load_state_dict(state_dict)
+        
     return model
 
 
