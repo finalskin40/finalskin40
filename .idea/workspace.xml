@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="3f96c147-934e-47bb-b15a-ba6fdcf1a833" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/ResNet.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/ResNet.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/my_model/ADV_ResNet.py" beforeDir="false" afterPath="$PROJECT_DIR$/my_model/ADV_ResNet.py" afterDir="false" />
-    </list>
+    <list default="true" id="3f96c147-934e-47bb-b15a-ba6fdcf1a833" name="Default Changelist" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
