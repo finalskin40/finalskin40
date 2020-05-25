@@ -1,60 +1,48 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="BranchesTreeState">
-    <expand>
-      <path>
-        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
-      </path>
-      <path>
-        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
-      </path>
-      <path>
-        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
-      </path>
-    </expand>
-    <select />
-  </component>
   <component name="ChangeListManager">
-    <list default="true" id="2bbb9c1d-52e2-45f1-aefa-ecf6c2b476e5" name="Default Changelist" comment="Bachsize小到一定程度之后会不收敛，所以调整为45，但是图片只能缩小到64" />
+    <list default="true" id="3f96c147-934e-47bb-b15a-ba6fdcf1a833" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Jupyter Notebook" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Rebase.Settings">
     <option name="ONTO" value="refs/remotes/origin/wangzicheng_SE_resnet" />
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
         <entry key="$PROJECT_DIR$" value="master" />
       </map>
     </option>
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectId" id="1boBL17lzPuXm2VSbBZb7lydw43" />
+  <component name="ProjectFrameBounds">
+    <option name="x" value="70" />
+    <option name="y" value="23" />
+    <option name="width" value="1610" />
+    <option name="height" value="1027" />
+  </component>
+  <component name="ProjectId" id="1cKwhx3y77SrGeScME0vEqbVZa2" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
-    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
-    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
-  <component name="PyConsoleOptionsProvider">
-    <option name="myPythonConsoleState">
-      <console-settings>
-        <option name="useSoftWraps" value="true" />
-      </console-settings>
-    </option>
-  </component>
   <component name="RunManager">
-    <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="finalskin40" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -68,7 +56,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
       <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
       <option name="REDIRECT_INPUT" value="false" />
@@ -86,107 +74,88 @@
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="2bbb9c1d-52e2-45f1-aefa-ecf6c2b476e5" name="Default Changelist" comment="" />
-      <created>1589288505572</created>
+      <changelist id="3f96c147-934e-47bb-b15a-ba6fdcf1a833" name="Default Changelist" comment="" />
+      <created>1589283849966</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1589288505572</updated>
+      <updated>1589283849966</updated>
     </task>
-    <task id="LOCAL-00001" summary="添加18层 SE ResNet 模型">
-      <created>1589292427211</created>
+    <task id="LOCAL-00001" summary="original">
+      <created>1589283963810</created>
       <option name="number" value="00001" />
       <option name="presentableId" value="LOCAL-00001" />
       <option name="project" value="LOCAL" />
-      <updated>1589292427211</updated>
+      <updated>1589283963810</updated>
     </task>
-    <task id="LOCAL-00002" summary="调整SE ResNet 超参数">
-      <created>1589330406842</created>
+    <task id="LOCAL-00002" summary="delete readme.txt">
+      <created>1589285266948</created>
       <option name="number" value="00002" />
       <option name="presentableId" value="LOCAL-00002" />
       <option name="project" value="LOCAL" />
-      <updated>1589330406842</updated>
+      <updated>1589285266948</updated>
     </task>
-    <task id="LOCAL-00003" summary="Bachsize小到一定程度之后会不收敛，所以调整为45，但是图片只能缩小到64">
-      <created>1589331820887</created>
+    <task id="LOCAL-00003" summary="修改基本CNN的参数，应对过拟合问题">
+      <created>1589285575156</created>
       <option name="number" value="00003" />
       <option name="presentableId" value="LOCAL-00003" />
       <option name="project" value="LOCAL" />
-      <updated>1589331820887</updated>
+      <updated>1589285575156</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="加入完整的官方ResNet实现">
+      <created>1589700941581</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1589700941581</updated>
+    </task>
+    <task id="LOCAL-00005" summary="每一个模型拥有独立的ipynb文件，这样不用频繁调整那些超参数">
+      <created>1589701100433</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1589701100433</updated>
+    </task>
+    <task id="LOCAL-00006" summary="支持多GPU同时运算，如此一来可以bachsize = 120, image = 256*256">
+      <created>1589705920177</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1589705920177</updated>
+    </task>
+    <task id="LOCAL-00007" summary="调整多GPU适配的参数，调节优化器参数">
+      <created>1589708551166</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1589708551166</updated>
+    </task>
+    <task id="LOCAL-00008" summary="调整多GPU适配的参数，调节优化器参数">
+      <created>1589708649917</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1589708649917</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
-  <component name="Vcs.Log.History.Properties">
-    <option name="COLUMN_ORDER">
-      <list>
-        <option value="0" />
-        <option value="2" />
-        <option value="3" />
-        <option value="1" />
-      </list>
-    </option>
-  </component>
-  <component name="Vcs.Log.Tabs.Properties">
-    <option name="TAB_STATES">
-      <map>
-        <entry key="MAIN">
-          <value>
-            <State />
-          </value>
-        </entry>
-      </map>
-    </option>
-    <option name="oldMeFiltersMigrated" value="true" />
+  <component name="TodoView" selected-index="4">
+    <todo-panel id="selected-file">
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+    <todo-panel id="all">
+      <are-packages-shown value="true" />
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="添加18层 SE ResNet 模型" />
-    <MESSAGE value="调整SE ResNet 超参数" />
-    <MESSAGE value="Bachsize小到一定程度之后会不收敛，所以调整为45，但是图片只能缩小到64" />
-    <option name="LAST_COMMIT_MESSAGE" value="Bachsize小到一定程度之后会不收敛，所以调整为45，但是图片只能缩小到64" />
-  </component>
-  <component name="WindowStateProjectService">
-    <state x="93" y="93" width="1350" height="638" key="DiffContextDialog" timestamp="1589289748584">
-      <screen x="0" y="0" width="1536" height="824" />
-    </state>
-    <state x="93" y="93" width="1350" height="638" key="DiffContextDialog/0.0.1536.824@0.0.1536.824" timestamp="1589289748584" />
-    <state x="549" y="167" key="FileChooserDialogImpl" timestamp="1589288560426">
-      <screen x="0" y="0" width="1536" height="824" />
-    </state>
-    <state x="549" y="167" key="FileChooserDialogImpl/0.0.1536.824@0.0.1536.824" timestamp="1589288560426" />
-    <state x="103" y="38" key="SettingsEditor" timestamp="1589288598908">
-      <screen x="0" y="0" width="1536" height="824" />
-    </state>
-    <state x="103" y="38" key="SettingsEditor/0.0.1536.824@0.0.1536.824" timestamp="1589288598908" />
-    <state x="361" y="145" key="Vcs.Push.Dialog.v2" timestamp="1589331837958">
-      <screen x="0" y="0" width="1536" height="824" />
-    </state>
-    <state x="361" y="145" key="Vcs.Push.Dialog.v2/0.0.1536.824@0.0.1536.824" timestamp="1589331837958" />
-    <state x="93" y="93" width="1350" height="638" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1589332380293">
-      <screen x="0" y="0" width="1536" height="824" />
-    </state>
-    <state x="93" y="93" width="1350" height="638" key="com.intellij.history.integration.ui.views.FileHistoryDialog/0.0.1536.824@0.0.1536.824" timestamp="1589332380293" />
-    <state x="93" y="93" width="1350" height="638" key="com.intellij.history.integration.ui.views.SelectionHistoryDialog" timestamp="1589332380293">
-      <screen x="0" y="0" width="1536" height="824" />
-    </state>
-    <state x="93" y="93" width="1350" height="638" key="com.intellij.history.integration.ui.views.SelectionHistoryDialog/0.0.1536.824@0.0.1536.824" timestamp="1589332380293" />
-    <state x="512" y="273" key="git4idea.rebase.GitRebaseDialog" timestamp="1589289197487">
-      <screen x="0" y="0" width="1536" height="824" />
-    </state>
-    <state x="512" y="273" key="git4idea.rebase.GitRebaseDialog/0.0.1536.824@0.0.1536.824" timestamp="1589289197487" />
-    <state x="431" y="145" width="672" height="678" key="search.everywhere.popup" timestamp="1589292386374">
-      <screen x="0" y="0" width="1536" height="824" />
-    </state>
-    <state x="431" y="145" width="672" height="678" key="search.everywhere.popup/0.0.1536.824@0.0.1536.824" timestamp="1589292386374" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/main.py</url>
-          <line>34</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+    <MESSAGE value="original" />
+    <MESSAGE value="delete readme.txt" />
+    <MESSAGE value="修改基本CNN的参数，应对过拟合问题" />
+    <MESSAGE value="加入完整的官方ResNet实现" />
+    <MESSAGE value="每一个模型拥有独立的ipynb文件，这样不用频繁调整那些超参数" />
+    <MESSAGE value="支持多GPU同时运算，如此一来可以bachsize = 120, image = 256*256" />
+    <MESSAGE value="调整多GPU适配的参数，调节优化器参数" />
+    <option name="LAST_COMMIT_MESSAGE" value="调整多GPU适配的参数，调节优化器参数" />
   </component>
 </project>
