@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
-from torch.utils.data import DataLoader, Dataset, random_split
+from torch.utils.data import DataLoader, Dataset, random_split, Subset
 from torchvision.datasets import ImageFolder
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,149 +9,278 @@ import torch.nn.functional as F
 from tqdm import tqdm
 from ourtools import *
 from my_model.Basic_CNN import Basic_CNN
-from my_model.SE_ResNet import *
+from my_model.ADV_ResNet import *
+from torch.autograd import Variable
+import seaborn as sns
+from sklearn.metrics import confusion_matrix
 import os
-
-# 查看训练曲线
-# 控制台执行
+import random
 """
 tensorboard --logdir log
 """
 base_path = os.getcwd()
-batch_size = 45
-input_size = 128  # 图片大小
-NUM_EPOCHS = 500
-LEARNING_RATE = 1e-3
+batch_size = 120
+input_size = 224  # 图片大小
+NUM_EPOCHS = 20
+LEARNING_RATE = 2e-4
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# optimizer
+loss = nn.CrossEntropyLoss()
 
-loss = F.cross_entropy
-model = ResNet(SEResidualBlock, [2, 2, 2, 2]).to(device=DEVICE) # Basic_CNN().to(device=DEVICE)
+
+
+def init_model(multi_gpu = True):
+    """
+    model = resnet152(pretrained=True) # Basic_CNN().to(device=DEVICE)
+    model.fc=nn.Linear(2048,40)
+    model = model.cuda()
+    if multi_gpu:
+        model = nn.DataParallel(model,device_ids=[0,1,2])
+    """
+    model = torch.load("pre-trained.pth")
+    optimizer = torch.optim.SGD(model.parameters(),lr=LEARNING_RATE,momentum=0.9,weight_decay=5e-4)
+    return model, optimizer
+
+print ("Loading pretrained data")
+model = resnet152(pretrained=True) # Basic_CNN().to(device=DEVICE)
+model.fc=nn.Linear(2048,40)
+model = model.cuda()
+model = nn.DataParallel(model,device_ids=[0,1,2])
 # state_dict = torch.load('latest-ai.pth')
 # model.load_state_dict(state_dict)
-optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
+optimizer = torch.optim.SGD(model.parameters(),lr=LEARNING_RATE,momentum=0.9,weight_decay=5e-4)
 
-"""
+
 transform = transforms.Compose(
     [
-        transforms.Resize(input_size),
-        transforms.CenterCrop((input_size, input_size)),
-        transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-    ]
-)
-"""
-transform = transforms.Compose(
-    [
-        transforms.Pad(4),
+        transforms.Resize((256,256)),
+        transforms.RandomCrop((224,224)),
         transforms.RandomHorizontalFlip(),
-        transforms.CenterCrop(64),
         transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        transforms.Normalize((0.485,0.456,0.406),(0.229,0.224,0.225))
     ])
 
 
 dataset = ImageFolder("Skin40", transform=transform)
 print(dataset)
 print(dataset.class_to_idx)
-'''
-train_db, val_db = random_split(dataset, [1920, 480])
-train_dataloader = DataLoader(train_db, shuffle=True, batch_size=batch_size)
-valid_dataloader = DataLoader(val_db, shuffle=False, batch_size=batch_size)
-'''
-dataset1, dataset2, dataset3, dataset4, dataset5 = random_split(dataset, [480, 480, 480, 480, 480])
 
-def evaluate(model_eval, loader_eval, criterion_eval):
-    """
-    TODO: Implement the evaluate loop.
-    """
-    """YOUR CODE HERE"""
-    model_eval.eval()
-    loss_eval = 0
-    correct = 0.0
-    pbar = tqdm(total=len(loader_eval), desc="Evaluation", ncols=100)
-    with torch.no_grad():
-        for data, target in loader_eval:
-            data, target = data.to(DEVICE), target.to(DEVICE)
-            output = model(data)
-            loss_eval += criterion_eval(output, target).item()
-
-            pred = output.argmax(dim=1, keepdim=True)
-            correct += pred.eq(target.view_as(pred)).sum().item()
-            pbar.update(1)
-    pbar.close()
-
-    loss_eval = loss_eval / loader_eval.dataset.__len__()
-    accuracy = correct / loader_eval.dataset.__len__()
-    response = {"loss": loss_eval, "acc": accuracy}
-    return response
+k = 0
+for i in range(40):
+    subdataset = Subset(dataset,[60*i+j for j in range(60)])
+    if k == 0:
+        k += 1
+        dataset1, dataset2, dataset3, dataset4, dataset5, dataset6 = random_split(subdataset, [10, 10, 10, 10, 10, 10])
+    else:
+        subset = random_split(subdataset, [10, 10, 10, 10, 10, 10])
+        dataset1 += subset[0]; dataset2 += subset[1]; dataset3 += subset[2]; dataset4 += subset[3]; dataset5 += subset[4]; dataset6 += subset[5]
 
 
-def train(model, loss_func, optimizer, device):
+class trainer():
+    def __init__(self):
+        self.loss_func = nn.CrossEntropyLoss()
+        self.device = DEVICE
+        self.model = ""
+        self.optimizer = ""
+        self.vote_rates = torch.zeros([5,40]).to(DEVICE)
+        self.latest_rates = torch.zeros([40]).to(DEVICE)
     
-    for i in range(5):
-        train_dataset = 0
-        valid_dataset = 0
-        for j,dataset0 in zip(range(5),(dataset1, dataset2, dataset3, dataset4, dataset5)):
-            if j != i:
-                if train_dataset == 0:
-                    train_dataset = dataset0
-                else:
-                    train_dataset += dataset0
-            else:
-                valid_dataset = dataset0
-        train_dataloader = DataLoader(train_dataset, shuffle=True, batch_size=batch_size)
-        valid_dataloader = DataLoader(valid_dataset, shuffle=False, batch_size=batch_size)
+    
+    def calculate_vote_rate(self, cm):
+        voter = torch.zeros([len(cm[0])]).to(DEVICE)
 
-        train_accs = []
-        train_losses = []
-        val_accs = []
-        val_losses = []
-        for epoch_idx in range(NUM_EPOCHS):
+        for i in range(0,len(cm[0])):
+            rec = sum(cm[i,:]) + 0.001
+            dec = sum(cm[:,i]) + 0.001
+            fin = min(cm[i,i]/rec,cm[i,i]/dec)
+            oct = 2*cm[i,i]/(rec+dec)
+            fin += oct
+            if (fin<1):
+                fin /= 2
+            voter[i]=fin*fin*2
+
+        return voter
+    
+    def print_confusion_matrix(self, y_pred,y_true):
+        sns.set()
+        f,ax = plt.subplots(figsize=(16,12))
+        C2 = confusion_matrix(y_true, y_pred)
+        self.latest_rates = self.calculate_vote_rate(C2)
+        recall_list=[]
+        for i in range(len(C2[0])):
+            aller = sum(C2[i])+1e-6
+            recall_list.append(C2[i][i]/aller)
         
+        sns.heatmap(C2,annot=True,ax=ax,cmap="Blues") #画热力图
+        ax.set_title('confusion matrix') #标题
+        ax.set_xlabel('predict') #x轴
+        ax.set_ylabel('true') #y轴
+        plt.show()
+        return sum(recall_list)/len(recall_list)
+    
+    
+    
+    def evaluate(self, model_eval, loader_eval, criterion_eval):
+
+        model_eval.eval()
+        loss_eval = 0
+        correct = 0.0
+        y_true = []
+        y_pred = []
+
+        with torch.no_grad():
+            for data, target in loader_eval:
+                data, target = Variable(data.cuda()),Variable(target.cuda())
+                output = self.model(data)
+                loss_eval += criterion_eval(output, target).item()
+
+                pred = output.argmax(dim=1, keepdim=True)
+
+                for itm in pred:
+                    y_pred.append(int(itm))
+                for real in target:
+                    y_true.append(int(real))
+
+                correct += pred.eq(target.view_as(pred)).sum().item()
+
+        baCC = self.print_confusion_matrix(y_pred,y_true)
+        loss_eval = loss_eval / loader_eval.dataset.__len__()
+        accuracy = correct / loader_eval.dataset.__len__()
+        response = {"loss": loss_eval, "acc": accuracy,"bACC":baCC}
+        return response
+    
+    def load_member(self, nid):
+        model = torch.load("latest-gp_ai_"+str(nid)+".pth")
+        model.eval()
+        return model
+    
+    def test(self):
+        
+        print(self.vote_rates[0][0:10])
+        print(self.vote_rates[0][10:20])
+        print(self.vote_rates[0][20:30])
+        print(self.vote_rates[0][30:40])
+        
+        model_list = []
+        for i in range(0,5):
+            model_list.append(self.load_member(i))
+        
+        loader_eval = DataLoader(testset, shuffle=False, batch_size=batch_size)
+        loss_eval = 0.0
+        correct = 0.0
+        y_true = []
+        y_pred = []
+
+        with torch.no_grad():
+            for data, target in loader_eval:
+                data, target = Variable(data.cuda()),Variable(target.cuda())
+                output_list = []
+                for i in range(0,5):
+                    output = model_list[i](data)*self.vote_rates[i]
+                    output_list.append(output)
+                
+                for j in range(1,5):
+                    output_list[0]+=output_list[j]
+                    
+                loss_eval += self.loss_func(output_list[0], target).item()
+
+                pred = output_list[0].argmax(dim=1, keepdim=True)
+
+                for itm in pred:
+                    y_pred.append(int(itm))
+                for real in target:
+                    y_true.append(int(real))
+
+                correct += pred.eq(target.view_as(pred)).sum().item()
+                
+        baCC = self.print_confusion_matrix(y_pred,y_true)
+        loss_eval = loss_eval / loader_eval.dataset.__len__()
+        accuracy = correct / loader_eval.dataset.__len__()
+        response = {"loss": loss_eval, "acc": accuracy,"bACC":baCC}
+        return response
+    
+    def train(self, loss_func, device):
+
+        self.loss_func = loss_func
+        self.device = device
+        
+        accALL = 0
+        bACCALL = 0
+        
+        for i in range(5):
+            self.model, self.optimizer = init_model()
+            train_dataset = 0
+            valid_dataset = 0
+            record = 0
             
+            for j,dataset0 in zip(range(5),(dataset1, dataset2, dataset3, dataset4, dataset5)):
+                if j != i:
+                    if train_dataset == 0:
+                        train_dataset = dataset0
+                    else:
+                        train_dataset += dataset0
+                else:
+                    valid_dataset = dataset0
+            train_dataloader = DataLoader(train_dataset, shuffle=True, batch_size=batch_size)
+            valid_dataloader = DataLoader(valid_dataset, shuffle=False, batch_size=batch_size)
+
+            train_accs = []
+            train_losses = []
+            val_accs = []
+            val_losses = []
+            
+            last_idx = NUM_EPOCHS-1;
+            
+            for epoch_idx in range(NUM_EPOCHS):
+                for batch_idx, (data, target) in enumerate(train_dataloader):
+
+                    data, target = data.to(DEVICE), target.to(DEVICE)
+                    output = self.model(data)
+                    loss = loss_func(output, target)
+                    self.optimizer.zero_grad()
+                    loss.backward()
+                    self.optimizer.step()
+
+                print("Train map")
+                train_resp = self.evaluate(self.model, train_dataloader, loss_func)
+                print("Valid map")
+                eval_resp = self.evaluate(self.model, valid_dataloader, loss_func)
+
+                print("-*-*-*-*-*- Epoch {} -*-*-*-*-*-".format(epoch_idx))
+                print("-*-*-*-*-*- fold {} -*-*-*-*-*-".format(i))
+                print("Train Loss: {:.6f}\t".format(train_resp["loss"]))
+                print("Train Acc: {:.6f}\t".format(train_resp["acc"]))
+                print("Train bACC: {:.6f}\t".format(train_resp["bACC"]))
+                print("Eval Loss: {:.6f}\t".format(eval_resp["loss"]))
+                print("Eval Acc: {:.6f}\t".format(eval_resp["acc"]))
+                print("Eval bACC: {:.6f}\t".format(eval_resp["bACC"]))
+                print("\n")
+                train_accs.append(train_resp["acc"])
+                train_losses.append(train_resp["loss"])
+                val_accs.append(eval_resp["acc"])
+                val_losses.append(eval_resp["loss"])
+                if epoch_idx == last_idx:
+                    accALL += eval_resp["acc"]
+                    bACCALL += eval_resp["bACC"]
+                
+                if epoch_idx > 5:
+                    if eval_resp["acc"]>record:
+                        record = eval_resp["acc"]
+                        self.vote_rates[i] = self.latest_rates
+                        torch.save(self.model, "latest-gp_ai_"+str(i)+".pth")
+                
+                if epoch_idx > 10:
+                    self.optimizer = torch.optim.SGD(self.model.parameters(),lr=LEARNING_RATE/2,momentum=0.9,weight_decay=1e-3)
+                
+            show_curve(train_accs, "train acc")
+            show_curve(train_losses, "train loss")
+            show_curve(val_accs, "val_acc")
+            show_curve(val_losses, "val_loss")
         
+        print("Final avg acc ")
+        print(accALL/5)
+        print("Final avg bACC")
+        print(bACCALL/5)
 
-            # TODO: Implement the training loop
-
-            # YOUR CODE HERE
-            pbar = tqdm(
-                total=len(train_dataloader),
-                desc="Train - Epoch {}".format(epoch_idx),
-                ncols=100,
-            )
-            for batch_idx, (data, target) in enumerate(train_dataloader):
-
-                data, target = data.to(DEVICE), target.to(DEVICE)
-                output = model(data)
-                loss = loss_func(output, target)
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-                pbar.update(1)
-            pbar.close()
-
-            # END OF YOUR CODE
-            train_resp = evaluate(model, train_dataloader, loss_func)
-            eval_resp = evaluate(model, valid_dataloader, loss_func)
-
-            print("-*-*-*-*-*- Epoch {} -*-*-*-*-*-".format(epoch_idx))
-            print("-*-*-*-*-*- fold {} -*-*-*-*-*-".format(i))
-            print("Train Loss: {:.6f}\t".format(train_resp["loss"]))
-            print("Train Acc: {:.6f}\t".format(train_resp["acc"]))
-            print("Eval Loss: {:.6f}\t".format(eval_resp["loss"]))
-            print("Eval Acc: {:.6f}\t".format(eval_resp["acc"]))
-            print("\n")
-            train_accs.append(train_resp["acc"])
-            train_losses.append(train_resp["loss"])
-            val_accs.append(eval_resp["acc"])
-            val_losses.append(eval_resp["loss"])
-            torch.save(model, "latest-ai.pth")
-
-        show_curve(train_accs, "train acc")
-        show_curve(train_losses, "train loss")
-        show_curve(val_accs, "val_acc")
-        show_curve(val_losses, "val_loss")
-
-
-train(model, loss, optimizer, DEVICE)
+train_player = trainer()
+train_player.train(loss,DEVICE)
+train_player.test()
