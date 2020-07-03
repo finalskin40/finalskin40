@@ -430,4 +430,3 @@ class trainer():
 train_player = trainer()
 train_player.train(loss,DEVICE)
 train_player.test()
-
