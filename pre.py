@@ -34,20 +34,20 @@ class LabelSmoothLoss(nn.Module):
     
     
 base_path = os.getcwd()
-batch_size = 120
+batch_size = 64
 input_size = 224  # 图片大小
 NUM_EPOCHS = 20
-LEARNING_RATE = 3.5e-5
+LEARNING_RATE = 1.5e-5
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 loss = LabelSmoothLoss(0.15)
 
 def init_model():
-    model = resnet50(pretrained=True) # Basic_CNN().to(device=DEVICE)
+    model = resnext101_32x8d(pretrained=True) # Basic_CNN().to(device=DEVICE)
     model.fc=nn.Linear(2048,40)
     model = model.cuda()
     model = nn.DataParallel(model,device_ids=[0,1,2,3])
     #optimizer = torch.optim.SGD(model.parameters(),lr=LEARNING_RATE,momentum=0.8,weight_decay=5e-4)
-    optimizer = torch.optim.Adam(model.parameters(),lr=LEARNING_RATE)
+    optimizer = torch.optim.Adam(model.parameters(),lr=LEARNING_RATE,weight_decay= 0.03)
     return model, optimizer
 
 print ("Loading pretrained data")
@@ -177,10 +177,10 @@ class trainer():
                     accALL += eval_resp["acc"]
                     bACCALL += eval_resp["bACC"]
                 
-                if epoch_idx > 15:
+                if epoch_idx > 5:
                     if eval_resp["acc"]>record:
                         record = eval_resp["acc"]
-                        torch.save(self.model, "pre-trained-50.pth")
+                        torch.save(self.model, "pre-trained-101-sp.pth")
 
             # torch.save(self.model, "pre-trained-ai_"+str(i)+".pth")
             show_curve(train_accs, "train acc")
