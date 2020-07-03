@@ -126,19 +126,24 @@ class LabelSmoothLoss(nn.Module):
         return loss
     
 base_path = os.getcwd()
-batch_size = 120
+batch_size = 64
 input_size = 224  # 图片大小
 NUM_EPOCHS = 20
-LEARNING_RATE = 2e-5
+LEARNING_RATE = 5e-6
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-loss = LabelSmoothLoss(0.1)
+loss = LabelSmoothLoss(0.15)
 
 def init_optimizer(model):
     #optimizer = torch.optim.SGD(model.parameters(),lr=LEARNING_RATE,momentum=0.9,weight_decay= 5e-4) # 5e-4
-    optimizer = torch.optim.Adam(model.parameters(),lr=LEARNING_RATE)
+    optimizer = torch.optim.Adam(model.parameters(),lr=LEARNING_RATE,weight_decay= 0.05)
     return optimizer
 
-def init_model(multi_gpu = True):
+def init_slow_optimizer(model):
+    #optimizer = torch.optim.SGD(model.parameters(),lr=LEARNING_RATE,momentum=0.9,weight_decay= 5e-4) # 5e-4
+    optimizer = torch.optim.Adam(model.parameters(),lr=LEARNING_RATE/5,weight_decay= 0.05)
+    return optimizer
+
+def init_model(ider,multi_gpu = True):
     """
     model = resnet152(pretrained=True) # Basic_CNN().to(device=DEVICE)
     model.fc=nn.Linear(2048,40)
@@ -146,8 +151,19 @@ def init_model(multi_gpu = True):
     if multi_gpu:
         model = nn.DataParallel(model,device_ids=[0,1,2])
     """
-    model = torch.load("pre-trained-50.pth")
-#     model = model.cuda()
+    aim = ider % 5
+    model = None
+    if aim == 0:
+        model = torch.load("pre-trained-101-sp.pth")
+    elif aim == 1:
+        model = torch.load("pre-trained-50-sp.pth")
+    elif aim == 2:
+        model = torch.load("pre-trained-152.pth")
+    elif aim == 3:
+        model = torch.load("pre-trained-50-wide.pth")
+    elif aim == 4:
+        model = torch.load("pre-trained-101-wide.pth")
+
 #     if multi_gpu:
 #         model = nn.DataParallel(model,device_ids=[0,1,2,3])
         
@@ -338,7 +354,7 @@ class trainer():
         for mc in range(0,1):
             for i in range(5):
                 model_id += 1
-                self.model, self.optimizer = init_model()
+                self.model, self.optimizer = init_model(model_id)
                 train_dataset = 0
                 valid_dataset = 0
                 record = 0
@@ -393,12 +409,14 @@ class trainer():
                         accALL += eval_resp["acc"]
                         bACCALL += eval_resp["bACC"]
 
-                    if epoch_idx > 5:
+                    if epoch_idx > 1:
                         if eval_resp["acc"]>record:
                             record = eval_resp["acc"]
                             self.vote_rates[model_id] = self.latest_rates
                             torch.save(self.model, "latest-gp_ai_"+str(model_id)+".pth")
-                    
+                    if epoch_idx == 10:
+                        self.optimizer = init_slow_optimizer(self.model)
+                        
                 show_curve(train_accs, "train acc")
                 show_curve(train_losses, "train loss")
                 show_curve(val_accs, "val_acc")
@@ -412,3 +430,4 @@ class trainer():
 train_player = trainer()
 train_player.train(loss,DEVICE)
 train_player.test()
+
