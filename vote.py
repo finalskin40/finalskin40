@@ -15,103 +15,7 @@ import seaborn as sns
 from sklearn.metrics import confusion_matrix
 import os
 import random
-"""
-tensorboard --logdir log
-"""
 
-
-class TripletLoss(nn.Module):
-    """Triplet loss with hard positive/negative mining.
-    Reference:
-    Hermans et al. In Defense of the Triplet Loss for Person Re-Identification. arXiv:1703.07737.
-    Code imported from https://github.com/Cysu/open-reid/blob/master/reid/loss/triplet.py.
-    Args:
-        margin (float): margin for triplet.
-    """
-    def __init__(self, margin=0.3, mutual_flag = False):
-        super(TripletLoss, self).__init__()
-        self.margin = margin
-        self.ranking_loss = nn.MarginRankingLoss(margin=margin)
-        self.mutual = mutual_flag
-
-    def forward(self, inputs, targets):
-        """
-        Args:
-            inputs: feature matrix with shape (batch_size, feat_dim)
-            targets: ground truth labels with shape (num_classes)
-        """
-        n = inputs.size(0)
-        # inputs = 1. * inputs / (torch.norm(inputs, 2, dim=-1, keepdim=True).expand_as(inputs) + 1e-12)
-        # Compute pairwise distance, replace by the official when merged
-        dist = torch.pow(inputs, 2).sum(dim=1, keepdim=True).expand(n, n)
-        dist = dist + dist.t()
-        dist.addmm_(1, -2, inputs, inputs.t())
-        dist = dist.clamp(min=1e-12).sqrt()  # for numerical stability
-        # For each anchor, find the hardest positive and negative
-        mask = targets.expand(n, n).eq(targets.expand(n, n).t())
-        dist_ap, dist_an = [], []
-        for i in range(n):
-            dist_ap.append(dist[i][mask[i]].max().unsqueeze(0))
-            dist_an.append(dist[i][mask[i] == 0].min().unsqueeze(0))
-        dist_ap = torch.cat(dist_ap)
-        dist_an = torch.cat(dist_an)
-        # Compute ranking hinge loss
-        y = torch.ones_like(dist_an)
-        loss = self.ranking_loss(dist_an, dist_ap, y)
-        if self.mutual:
-            return loss, dist
-        return loss
-
-class CenterLoss(nn.Module):
-    """Center loss.
-    Reference:
-    Wen et al. A Discriminative Feature Learning Approach for Deep Face Recognition. ECCV 2016.
-    Args:
-        num_classes (int): number of classes.
-        feat_dim (int): feature dimension.
-    """
- 
-    def __init__(self, num_classes=751, feat_dim=240, use_gpu=True):
-        super(CenterLoss, self).__init__()
-        self.num_classes = num_classes
-        self.feat_dim = feat_dim
-        self.use_gpu = use_gpu
- 
-        if self.use_gpu:
-            self.centers = nn.Parameter(torch.randn(self.num_classes, self.feat_dim).cuda())
-        else:
-            self.centers = nn.Parameter(torch.randn(self.num_classes, self.feat_dim))
- 
-    def forward(self, x, labels):
-        """
-        Args:
-            x: feature matrix with shape (batch_size, feat_dim).
-            labels: ground truth labels with shape (num_classes).
-        """
-        assert x.size(0) == labels.size(0), "features.size(0) is not equal to labels.size(0)"
- 
-        batch_size = x.size(0)
-        distmat = torch.pow(x, 2).sum(dim=1, keepdim=True).expand(batch_size, self.num_classes) + \
-                  torch.pow(self.centers, 2).sum(dim=1, keepdim=True).expand(self.num_classes, batch_size).t()
-        distmat.addmm_(1, -2, x, self.centers.t())
- 
-        classes = torch.arange(self.num_classes).long()
-        if self.use_gpu: classes = classes.cuda()
-        labels = labels.unsqueeze(1).expand(batch_size, self.num_classes)
-        mask = labels.eq(classes.expand(batch_size, self.num_classes))
-        print(mask)
- 
-        dist = []
-        for i in range(batch_size):
-            print(mask[i])
-            value = distmat[i][mask[i]]
-            value = value.clamp(min=1e-12, max=1e+12)  # for numerical stability
-            dist.append(value)
-        dist = torch.cat(dist)
-        loss = dist.mean()
-        return loss
-
-    
 class LabelSmoothLoss(nn.Module):
     def __init__(self, smoothing=0.0):
         super(LabelSmoothLoss, self).__init__()
@@ -183,14 +87,6 @@ def init_152model(multi_gpu = True):
 
 
 print ("Loading pretrained data")
-# model = resnet152(pretrained=True) # Basic_CNN().to(device=DEVICE)
-# model.fc=nn.Linear(2048,40)
-# model = model.cuda()
-# model = nn.DataParallel(model,device_ids=[0,1,2])
-# # state_dict = torch.load('latest-ai.pth')
-# # model.load_state_dict(state_dict)
-# optimizer = torch.optim.SGD(model.parameters(),lr=LEARNING_RATE,momentum=0.9,weight_decay=0.005)
-
 
 transform = transforms.Compose(
     [
@@ -207,17 +103,22 @@ print(dataset)
 print(dataset.class_to_idx)
 
 k = 0
+mydatasets = []
 for i in range(40):
-    subdataset = Subset(dataset,[60*i+j for j in range(60)])
-    if k == 0:
-        k += 1
-        dataset1, dataset2, dataset3, dataset4, dataset5, dataset6 = random_split(subdataset, [10, 10, 10, 10, 10, 10])
-    else:
-        subset = random_split(subdataset, [10, 10, 10, 10, 10, 10])
-        dataset1 += subset[0]; dataset2 += subset[1]; dataset3 += subset[2]; dataset4 += subset[3]; dataset5 += subset[4]; dataset6 += subset[5]
+    for k in range(6):
+        apset = None
+        for j in range(10):
+            st = j*6+k
+            ed = st+1
+            if j == 0:
+                apset = Subset(dataset,[60*i+ej for ej in range(st,ed)])
+            else:
+                apset += Subset(dataset,[60*i+ej for ej in range(st,ed)])
+        if i == 0:
+            mydatasets.append(apset)
+        else:
+            mydatasets[k]+=apset
         
-# partdataset = ImageFolder("New_Skin40", transform=transform)
-testset = dataset6
 class trainer():
     def __init__(self):
         self.loss_func = nn.CrossEntropyLoss()
@@ -295,7 +196,7 @@ class trainer():
         model.eval()
         return model
     
-    def test(self):
+    def test(self,testset):
         
         print(self.vote_rates[0][0:10])
         print(self.vote_rates[0][10:20])
@@ -306,7 +207,7 @@ class trainer():
         for i in range(0,self.submodelnum):
             model_list.append(self.load_member(i))
         
-        loader_eval = DataLoader(testset, shuffle=False, batch_size=batch_size)
+        loader_eval = DataLoader(testset, shuffle=True, batch_size=batch_size)
         loss_eval = 0.0
         correct = 0.0
         y_true = []
@@ -340,7 +241,7 @@ class trainer():
         response = {"loss": loss_eval, "acc": accuracy,"bACC":baCC}
         return response
     
-    def train(self, loss_func, device):
+    def train(self, loss_func, device, testsetid = 0):
 
         self.loss_func = loss_func
         self.device = device
@@ -349,26 +250,30 @@ class trainer():
         bACCALL = 0
         model_id = int(-1)
         
-        
-        
         for mc in range(0,1):
-            for i in range(5):
+            for i in range(6):
+                if i == testsetid:
+                    continue
+                    
                 model_id += 1
                 self.model, self.optimizer = init_model(model_id)
                 train_dataset = 0
                 valid_dataset = 0
                 record = 0
-
-                for j,dataset0 in zip(range(5),(dataset1, dataset2, dataset3, dataset4, dataset5)):
+                
+                for j in range(6):
+                    if j == testsetid:
+                        continue
                     if j != i:
                         if train_dataset == 0:
-                            train_dataset = dataset0
+                            train_dataset = mydatasets[j]
                         else:
-                            train_dataset += dataset0
+                            train_dataset += mydatasets[j]
                     else:
-                        valid_dataset = dataset0
+                        valid_dataset = mydatasets[j]
+
                 train_dataloader = DataLoader(train_dataset, shuffle=True, batch_size=batch_size)
-                valid_dataloader = DataLoader(valid_dataset, shuffle=False, batch_size=batch_size)
+                valid_dataloader = DataLoader(valid_dataset, shuffle=True, batch_size=batch_size)
 
                 train_accs = []
                 train_losses = []
@@ -391,7 +296,8 @@ class trainer():
                     train_resp = self.evaluate(self.model, train_dataloader, loss_func)
                     print("Valid map")
                     eval_resp = self.evaluate(self.model, valid_dataloader, loss_func)
-
+                    
+                    print("-*-*-*-*-*- Testloop {} -*-*-*-*-*-".format(testsetid))
                     print("-*-*-*-*-*- Epoch {} -*-*-*-*-*-".format(epoch_idx))
                     print("-*-*-*-*-*- fold {} -*-*-*-*-*-".format(model_id))
                     print("Train Loss: {:.6f}\t".format(train_resp["loss"]))
@@ -427,6 +333,10 @@ class trainer():
         print("Final avg bACC")
         print(bACCALL/self.submodelnum)
 
-train_player = trainer()
-train_player.train(loss,DEVICE)
-train_player.test()
+for testid in range(3,6):
+    ntid = testid
+    testset = mydatasets[ntid]
+    train_player = trainer()
+    train_player.train(loss,DEVICE,ntid)
+    res = train_player.test(testset)
+    print(res)
