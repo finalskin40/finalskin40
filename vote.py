@@ -36,15 +36,15 @@ NUM_EPOCHS = 20
 LEARNING_RATE = 5e-6
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 loss = LabelSmoothLoss(0.15)
-
+# loss = nn.CrossEntropyLoss()
 def init_optimizer(model):
     #optimizer = torch.optim.SGD(model.parameters(),lr=LEARNING_RATE,momentum=0.9,weight_decay= 5e-4) # 5e-4
-    optimizer = torch.optim.Adam(model.parameters(),lr=LEARNING_RATE,weight_decay= 0.05)
+    optimizer = torch.optim.Adam(model.parameters(),lr=LEARNING_RATE,weight_decay= 0.001)
     return optimizer
 
 def init_slow_optimizer(model):
     #optimizer = torch.optim.SGD(model.parameters(),lr=LEARNING_RATE,momentum=0.9,weight_decay= 5e-4) # 5e-4
-    optimizer = torch.optim.Adam(model.parameters(),lr=LEARNING_RATE/5,weight_decay= 0.05)
+    optimizer = torch.optim.Adam(model.parameters(),lr=LEARNING_RATE/5,weight_decay= 0.001)
     return optimizer
 
 def init_model(ider,multi_gpu = True):
@@ -102,6 +102,7 @@ dataset = ImageFolder("Skin40", transform=transform)
 print(dataset)
 print(dataset.class_to_idx)
 
+networkcheckbegin = 0
 k = 0
 mydatasets = []
 for i in range(40):
@@ -333,10 +334,11 @@ class trainer():
         print("Final avg bACC")
         print(bACCALL/self.submodelnum)
 
-for testid in range(3,6):
+for testid in range(0,6):
     ntid = testid
     testset = mydatasets[ntid]
     train_player = trainer()
     train_player.train(loss,DEVICE,ntid)
     res = train_player.test(testset)
     print(res)
+    networkcheckbegin = 0
